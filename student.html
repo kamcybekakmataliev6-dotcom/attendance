@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сабакка каттоо</title>
+    <style>
+        body { font-family: Arial; background: linear-gradient(135deg, #667eea, #764ba2); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; padding: 20px; }
+        .card { background: white; padding: 35px 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); width: 100%; max-width: 380px; text-align: center; }
+        h2 { color: #333; margin-bottom: 5px; }
+        .subject { color: #667eea; font-weight: bold; font-size: 15px; margin-bottom: 20px; }
+        input { width: 100%; padding: 14px; margin: 8px 0; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        input:focus { outline: none; border-color: #667eea; }
+        button { width: 100%; padding: 15px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        button:disabled { background: #aaa; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 10px; font-weight: bold; display: none; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📚 Сабакка каттоо</h2>
+        <div class="subject" id="subjectInfo">Жүктөлүүдө...</div>
+
+        <input type="text" id="name" placeholder="Аты-жөнүңүз" required>
+        <input type="text" id="studentId" placeholder="Студенттик ID" required>
+
+        <button id="submitBtn" onclick="submitAttendance()">✅ Каттоо</button>
+
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzfHSeJgYB9e49NHrzC-sZIwN2n6MM6mBpWMxuLfca2YLkKV7FwhkUxFzEQEwUlFYai/exec';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const TOKEN = urlParams.get('token') || '';
+        const SUBJECT = urlParams.get('subject') || '';
+        const GROUP = urlParams.get('group') || '';
+
+        document.getElementById('subjectInfo').innerText = SUBJECT + ' — ' + GROUP;
+
+        async function submitAttendance() {
+            const name = document.getElementById('name').value.trim();
+            const studentId = document.getElementById('studentId').value.trim();
+            const btn = document.getElementById('submitBtn');
+            const result = document.getElementById('result');
+
+            if (!name || !studentId) {
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.innerText = '⚠️ Атыңызды жана ID жазыңыз!';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Жөнөтүлүүдө...';
+
+            try {
+                const url = `${APPS_SCRIPT_URL}?token=${encodeURIComponent(TOKEN)}&name=${encodeURIComponent(name)}&id=${encodeURIComponent(studentId)}&subject=${encodeURIComponent(SUBJECT)}&group=${encodeURIComponent(GROUP)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                result.className = 'result ' + (data.status === 'success' ? 'success' : 'error');
+                result.style.display = 'block';
+                result.innerText = data.message;
+
+                if (data.status === 'success') {
+                    btn.innerText = '✅ Катталдыңыз';
+                } else {
+                    btn.disabled = false;
+                    btn.innerText = '✅ Каттоо';
+                }
+            } catch (err) {
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.innerText = '❌ Ката: ' + err.message;
+                btn.disabled = false;
+                btn.innerText = '✅ Каттоо';
+            }
+        }
+    </script>
+</body>
+</html>
